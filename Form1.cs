@@ -1,10 +1,15 @@
 using System;
 using System.Windows.Forms;
-
+using System.Runtime.InteropServices;
+using System.Diagnostics; // For DllImport
 namespace scheduling
 {
     public partial class Form1 : Form
     {
+
+         [DllImport("FCFS.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void PerformFCFS(int size, Process[] proc);
+
         // Define your controls
         private DataGridView dataGridView;
         private TextBox processIdTextBox;
@@ -12,6 +17,18 @@ namespace scheduling
         private TextBox burstTimeTextBox;
         private Button addButton;
         private DataGridView detailedDataGridView;
+          private ComboBox schedulingMethodComboBox; // Declare it here
+
+
+            public class Process
+        {
+            public int pid { get; set; } // Process ID
+            public int arrivalTime { get; set; } // Arrival time
+            public int burstTime { get; set; } // Burst time
+            public int waitingTime { get; set; } // Waiting time
+            public int completionTime { get; set; } // Completion time
+            public int turnAroundTime { get; set; } // Turnaround time
+        }
 
         public Form1()
         {
@@ -147,12 +164,12 @@ resultsGroupBox.Controls.Add(throughputTextBox);
     this.Controls.Add(schedulingMethodLabel);
 
     // ComboBox for selecting scheduling methods
-    ComboBox schedulingMethodComboBox = new ComboBox();
-    schedulingMethodComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
-    schedulingMethodComboBox.Items.AddRange(new string[] { "First Come First Served", "Shortest Job First", "Shortest Remaining Time First" });
-    schedulingMethodComboBox.Location = new System.Drawing.Point(620, 70); // Adjusted Y position
-    schedulingMethodComboBox.Size = new System.Drawing.Size(200, 20);
-    this.Controls.Add(schedulingMethodComboBox);
+      schedulingMethodComboBox = new ComboBox();
+            schedulingMethodComboBox.DropDownStyle = ComboBoxStyle.DropDownList;
+            schedulingMethodComboBox.Items.AddRange(new string[] { "First Come First Served", "Shortest Job First", "Shortest Remaining Time First" });
+            schedulingMethodComboBox.Location = new System.Drawing.Point(620, 70); // Adjusted Y position
+            schedulingMethodComboBox.Size = new System.Drawing.Size(200, 20);
+            this.Controls.Add(schedulingMethodComboBox);
 }
 
 
@@ -177,11 +194,58 @@ resultsGroupBox.Controls.Add(throughputTextBox);
             burstTimeTextBox.Clear();
         }
 
-        private void CalculateButton_Click(object sender, EventArgs e)
+private void CalculateButton_Click(object sender, EventArgs e)
+{
+    // Handle logic for calculating based on the selected scheduling method
+   string selectedMethod = schedulingMethodComboBox.SelectedItem?.ToString();
+
+
+    if (selectedMethod == null)
+    {
+        MessageBox.Show("Please select a scheduling method.");
+        return;
+    }
+
+    if (selectedMethod == "First Come First Served")
+    {
+        // Prepare data structures to hold process details
+        List<Process> processes = new List<Process>();
+
+        // Read process details from the DataGridView
+        foreach (DataGridViewRow row in dataGridView.Rows)
         {
-            // Handle logic for calculating based on the selected scheduling method
-            // You can access the selected scheduling method using schedulingMethodComboBox.SelectedItem
-            // Implement the calculation logic accordingly
+            if (!row.IsNewRow)
+            {
+                Process process = new Process();
+                process.pid = Convert.ToInt32(row.Cells["ProcessID"].Value);
+                process.arrivalTime = Convert.ToInt32(row.Cells["ArrivalTime"].Value);
+                process.burstTime = Convert.ToInt32(row.Cells["BurstTime"].Value);
+                processes.Add(process);
+            }
         }
+
+     
+        PerformFCFS(processes.Count, processes.ToArray());
+
+
+    }
+    else if (selectedMethod == "Shortest Job First")
+    {
+        // Implement Shortest Job First algorithm
+    }
+    else if (selectedMethod == "Shortest Remaining Time First")
+    {
+        // Implement Shortest Remaining Time First algorithm
+    }
+    else
+    {
+        MessageBox.Show("Invalid scheduling method selected.");
+    }
+}
+
+
+                // Call the C++ FCFS algorithm
+         
+        
     }
 }
